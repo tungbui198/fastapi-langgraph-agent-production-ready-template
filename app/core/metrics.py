@@ -1,49 +1,64 @@
-"""Prometheus metrics configuration for the application.
+"""Langfuse-based metrics utilities."""
 
-This module sets up and configures Prometheus metrics for monitoring the application.
-"""
+from __future__ import annotations
 
-from prometheus_client import Counter, Histogram, Gauge
-from starlette_prometheus import metrics, PrometheusMiddleware
+import os
+import time
+import uuid
+from contextlib import contextmanager
+from typing import Any, Dict
 
-# Request metrics
-http_requests_total = Counter("http_requests_total", "Total number of HTTP requests", ["method", "endpoint", "status"])
+from langfuse import Langfuse
 
-http_request_duration_seconds = Histogram(
-    "http_request_duration_seconds", "HTTP request duration in seconds", ["method", "endpoint"]
-)
 
-# Database metrics
-db_connections = Gauge("db_connections", "Number of active database connections")
-
-# Custom business metrics
-orders_processed = Counter("orders_processed_total", "Total number of orders processed")
-
-llm_inference_duration_seconds = Histogram(
-    "llm_inference_duration_seconds",
-    "Time spent processing LLM inference",
-    ["model"],
-    buckets=[0.1, 0.3, 0.5, 1.0, 2.0, 5.0]
+langfuse_client = Langfuse(
+    public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
+    secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
+    host=os.getenv("LANGFUSE_HOST", "http://localhost:3000"),
 )
 
 
+def log_event(name: str, metadata: Dict[str, Any] | None = None) -> None:
+    """Send a metric event to Langfuse."""
+    try:
+        langfuse_client.event(
+            trace_id=str(uuid.uuid4()),
+            name=name,
+            metadata=metadata or {},
+        )
+    except Exception:
+        # Ignore errors to not impact main flow
+        pass
 
-llm_stream_duration_seconds = Histogram(
-    "llm_stream_duration_seconds",
-    "Time spent processing LLM stream inference",
-    ["model"],
-    buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0]
-)
+
+@contextmanager
+def measure_llm_stream(model: str) -> None:
+    """Context manager to measure LLM stream duration."""
+    start = time.time()
+    try:
+        yield
+    finally:
+        duration = time.time() - start
+        log_event(
+            "llm_stream_duration",
+            {"model": model, "duration": duration},
+        )
 
 
-def setup_metrics(app):
-    """Set up Prometheus metrics middleware and endpoints.
+def record_http_request(method: str, endpoint: str, status: int, duration: float) -> None:
+    """Record an HTTP request metric."""
+    log_event(
+        "http_request",
+        {
+            "method": method,
+            "endpoint": endpoint,
+            "status": status,
+            "duration": duration,
+        },
+    )
 
-    Args:
-        app: FastAPI application instance
-    """
-    # Add Prometheus middleware
-    app.add_middleware(PrometheusMiddleware)
 
-    # Add metrics endpoint
-    app.add_route("/metrics", metrics)
+def setup_metrics(app) -> None:  # noqa: D401
+    """Placeholder for compatibility."""
+    # No-op since metrics are directly sent to Langfuse
+    return None

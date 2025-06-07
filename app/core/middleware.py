@@ -7,11 +7,7 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from app.core.metrics import (
-    http_requests_total,
-    http_request_duration_seconds,
-    db_connections,
-)
+from app.core.metrics import record_http_request
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):
@@ -37,10 +33,11 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             raise
         finally:
             duration = time.time() - start_time
-
-            # Record metrics
-            http_requests_total.labels(method=request.method, endpoint=request.url.path, status=status_code).inc()
-
-            http_request_duration_seconds.labels(method=request.method, endpoint=request.url.path).observe(duration)
+            record_http_request(
+                request.method,
+                request.url.path,
+                status_code,
+                duration,
+            )
 
         return response

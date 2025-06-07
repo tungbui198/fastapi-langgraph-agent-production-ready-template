@@ -147,6 +147,6 @@ help:
 	@echo "  docker-run-env ENV=<environment>: Run Docker container for specific environment"
 	@echo "  docker-logs ENV=<environment>: View logs from running container"
 	@echo "  docker-stop ENV=<environment>: Stop and remove container"
-	@echo "  docker-compose-up: Start the entire stack (API, Prometheus, Grafana)"
+@echo "  docker-compose-up: Start the entire stack (API, Langfuse)"
 	@echo "  docker-compose-down: Stop the entire stack"
 	@echo "  docker-compose-logs: View logs from all services"

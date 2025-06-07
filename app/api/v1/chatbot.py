@@ -14,7 +14,7 @@ from fastapi import (
     Request,
 )
 from fastapi.responses import StreamingResponse
-from app.core.metrics import llm_stream_duration_seconds
+from app.core.metrics import measure_llm_stream
 from app.api.v1.auth import get_current_session
 from app.core.config import settings
 from app.core.langgraph.graph import LangGraphAgent
@@ -112,10 +112,12 @@ async def chat_stream(
             """
             try:
                 full_response = ""
-                with llm_stream_duration_seconds.labels(model=agent.llm.model_name).time():
+                with measure_llm_stream(agent.llm.model_name):
                     async for chunk in agent.get_stream_response(
-                        chat_request.messages, session.id, user_id=session.user_id
-                     ):
+                        chat_request.messages,
+                        session.id,
+                        user_id=session.user_id,
+                    ):
                         full_response += chunk
                         response = StreamResponse(content=chunk, done=False)
                         yield f"data: {json.dumps(response.model_dump())}\n\n"
