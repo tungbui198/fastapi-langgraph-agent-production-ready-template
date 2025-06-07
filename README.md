@@ -13,7 +13,7 @@ A production-ready FastAPI template for building AI agent applications with Lang
   - Rate limiting with configurable rules
   - PostgreSQL for data persistence
   - Docker and Docker Compose support
-  - Prometheus metrics and Grafana dashboards for monitoring
+  - Langfuse metrics for monitoring
 
 - **Security**
 
@@ -111,30 +111,17 @@ make docker-build-env ENV=[development|staging|production] # e.g. make docker-bu
 make docker-run-env ENV=[development|staging|production] # e.g. make docker-run-env ENV=development
 ```
 
-2. Access the monitoring stack:
+2. Access the Langfuse UI:
 
 ```bash
-# Prometheus metrics
-http://localhost:9090
-
-# Grafana dashboards
 http://localhost:3000
-Default credentials:
-- Username: admin
-- Password: admin
 ```
 
 The Docker setup includes:
 
 - FastAPI application
 - PostgreSQL database
-- Prometheus for metrics collection
-- Grafana for metrics visualization
-- Pre-configured dashboards for:
-  - API performance metrics
-  - Rate limiting statistics
-  - Database performance
-  - System resource usage
+- Langfuse for metrics and traces
 
 ## 📊 Model Evaluation
 

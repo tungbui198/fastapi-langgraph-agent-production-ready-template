@@ -31,31 +31,15 @@ services:
     networks:
       - monitoring
 
-  # Prometheus
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    networks:
-      - monitoring
-    restart: always
 
-  # Grafana
-  grafana:
-    image: grafana/grafana:latest
+  # Langfuse self-hosted
+  langfuse:
+    image: langfuse/langfuse:latest
     ports:
       - "3000:3000"
-    volumes:
-      - grafana-storage:/var/lib/grafana
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./grafana/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
+      - DATABASE_URL=${LANGFUSE_DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/langfuse}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-changeme}
     networks:
       - monitoring
     restart: always
@@ -77,6 +61,3 @@ services:
 networks:
   monitoring:
     driver: bridge
-
-volumes:
-  grafana-storage: 
